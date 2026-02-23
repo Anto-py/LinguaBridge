@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LinguaBridge</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="popup-frame">
+
+    <header class="popup-header">
+      <div class="popup-logo">
+        <span class="popup-logo-icon">⬡</span>
+        <span class="popup-logo-name">LinguaBridge</span>
+      </div>
+    </header>
+
+    <main class="popup-main">
+      <label class="popup-label" for="langue-select">
+        <!-- Icône globe — label accessible sans texte en français dans le contrôle -->
+        <span class="popup-label-icon" aria-hidden="true">🌐</span>
+        <span class="sr-only">Langue cible</span>
+      </label>
+
+      <div class="popup-select-wrapper">
+        <select id="langue-select" class="popup-select" aria-label="Choisir la langue de traduction">
+          <!-- Rempli dynamiquement par popup.js -->
+        </select>
+        <span class="popup-select-arrow" aria-hidden="true">▾</span>
+      </div>
+
+      <div id="popup-status" class="popup-status" aria-live="polite"></div>
+    </main>
+
+    <footer class="popup-footer">
+      <button id="export-btn" class="popup-export-btn" title="Exporter le carnet (CSV Anki)">
+        <span class="popup-export-icon" aria-hidden="true">⬇</span>
+        <span id="vocab-count" class="popup-export-count">…</span>
+      </button>
+    </footer>
+
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

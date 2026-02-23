@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>LinguaBridge — Test proxy</title>
+  <style>
+    :root {
+      --teal: #127676; --orange: #E4632E; --jaune: #E3A535;
+      --ink: #0D1617;  --paper: #F2EFE6;
+    }
+    body { font-family: system-ui, sans-serif; background: var(--paper); color: var(--ink); max-width: 700px; margin: 40px auto; padding: 0 20px; }
+    h1   { color: var(--teal); font-size: 1.4rem; border-bottom: 3px solid var(--orange); padding-bottom: 8px; }
+    label { display: block; font-weight: 600; margin: 16px 0 4px; }
+    input, textarea, select { width: 100%; padding: 8px 10px; border: 2px solid var(--teal); border-radius: 6px; font-family: inherit; font-size: 14px; background: white; box-sizing: border-box; }
+    textarea { height: 90px; resize: vertical; }
+    button { margin-top: 16px; padding: 10px 28px; background: var(--teal); color: var(--paper); border: none; border-radius: 50px; font-size: 14px; font-weight: 700; cursor: pointer; }
+    button:hover { background: var(--orange); }
+    #result { margin-top: 24px; padding: 16px; border: 2px solid var(--teal); border-radius: 8px; background: white; white-space: pre-wrap; font-size: 13px; min-height: 60px; display: none; }
+    #result.error { border-color: var(--orange); color: var(--orange); }
+    #result.ok    { border-color: var(--teal); }
+    .badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px; margin-left: 8px; }
+    .badge-ok  { background: rgba(18,118,118,0.15); color: var(--teal); }
+    .badge-err { background: rgba(228,99,46,0.15);  color: var(--orange); }
+  </style>
+</head>
+<body>
+
+<h1>⬡ LinguaBridge — Test du proxy</h1>
+
+<label for="url">URL du proxy Vercel</label>
+<input id="url" type="url" placeholder="https://YOUR_PROJECT.vercel.app/api/claude" />
+
+<label for="mode">Action à tester</label>
+<select id="mode">
+  <option value="definition">Définir un mot</option>
+  <option value="simplifier">Simplifier un texte</option>
+  <option value="traduire">Traduire un texte</option>
+</select>
+
+<label for="prompt">Texte / Mot</label>
+<textarea id="prompt" placeholder="Entrer le mot ou texte à traiter…"></textarea>
+
+<label for="langue">Langue cible</label>
+<select id="langue">
+  <option value="en">Anglais</option>
+  <option value="ar">Arabe standard</option>
+  <option value="ln">Lingala</option>
+  <option value="ro">Roumain</option>
+  <option value="sw">Swahili</option>
+</select>
+
+<button id="send-btn">Envoyer →</button>
+
+<div id="result"></div>
+
+<script>
+  const SYSTEM_PROMPTS = {
+    definition: (lang) => `Tu es un assistant pour apprenants de français langue étrangère niveau A1.
+Pour le mot donné, fournis :
+1. Une définition en français ultra-simple (max 1 phrase, mots courants)
+2. La traduction en ${lang}
+Format JSON : { "definition": "...", "traduction": "..." }`,
+
+    simplifier: () => `Tu es un expert en FALC (Facile à Lire et à Comprendre).
+Réécris le texte suivant en français niveau A2 maximum.
+Conserve toute l'information. Phrases courtes. Vocabulaire courant.
+Ne traduis pas. Retourne uniquement le texte simplifié.`,
+
+    traduire: (lang) => `Traduis le texte suivant en ${lang}.
+Retourne un JSON : { "original": "...", "traduction": "..." }
+Ne modifie pas le texte original.`,
+  };
+
+  document.getElementById('send-btn').addEventListener('click', async () => {
+    const url    = document.getElementById('url').value.trim();
+    const mode   = document.getElementById('mode').value;
+    const prompt = document.getElementById('prompt').value.trim();
+    const langue = document.getElementById('langue').value;
+    const result = document.getElementById('result');
+
+    if (!url || !prompt) {
+      result.textContent = '⚠ Remplir l\'URL et le texte.';
+      result.className = 'error';
+      result.style.display = 'block';
+      return;
+    }
+
+    const btn = document.getElementById('send-btn');
+    btn.textContent = '…';
+    btn.disabled = true;
+    result.style.display = 'none';
+
+    const t0 = Date.now();
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt,
+          systemPrompt: SYSTEM_PROMPTS[mode](langue),
+          langue,
+        }),
+      });
+
+      const data = await res.json();
+      const ms = Date.now() - t0;
+      const badge = data.error
+        ? `<span class="badge badge-err">Erreur ${res.status}</span>`
+        : `<span class="badge badge-ok">✓ ${ms} ms</span>`;
+
+      result.innerHTML = badge + '\n\n' + JSON.stringify(data, null, 2);
+      result.className = data.error ? 'error' : 'ok';
+    } catch (err) {
+      result.textContent = '✕ ' + err.message;
+      result.className = 'error';
+    }
+
+    result.style.display = 'block';
+    btn.textContent = 'Envoyer →';
+    btn.disabled = false;
+  });
+</script>
+</body>
+</html>
