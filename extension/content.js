@@ -309,7 +309,7 @@ async function callProxy(prompt, systemPrompt) {
 // Sauvegarde automatiquement le mot dans le carnet de vocabulaire
 function renderTooltip(tooltip, raw, word) {
   try {
-    const data = JSON.parse(raw);
+    const data = parseJsonSafe(raw);
     if (data.error) throw new Error(data.error);
 
     const isNew = saveWord(word, data.definition, data.traduction, currentLang);
@@ -355,7 +355,7 @@ function renderSimplification(result, original) {
 // Affiche la traduction en mode bilingue côte à côte, avec support RTL
 function renderTranslation(raw) {
   try {
-    const data = JSON.parse(raw);
+    const data = parseJsonSafe(raw);
     if (data.error) throw new Error(data.error);
 
     const langName = LANG_NAMES[currentLang] || currentLang;
@@ -391,6 +391,14 @@ function positionElement(el, x, y) {
   el.style.left = `${Math.min(x, window.innerWidth - 320)}px`;
   el.style.top = `${Math.max(8, Math.min(y, window.innerHeight - 220))}px`;
   el.style.zIndex = '2147483647';
+}
+
+// Parse une réponse JSON du LLM en nettoyant les balises markdown éventuelles
+function parseJsonSafe(raw) {
+  if (typeof raw !== 'string') throw new Error('Réponse vide');
+  // Supprime les blocs ```json ... ``` ou ``` ... ```
+  const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
+  return JSON.parse(cleaned);
 }
 
 // Échappe les caractères HTML pour prévenir les injections XSS
