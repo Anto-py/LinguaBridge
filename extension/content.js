@@ -1,5 +1,5 @@
 // content.js — Script injecté dans toutes les pages web
-// Gère le survol de mots, la sélection de texte, et l'affichage des résultats
+// Déclencheur unique : surlignement de texte (sélection souris ou double-clic)
 
 'use strict';
 
@@ -7,7 +7,6 @@
 
 // URL du proxy — définie dans config.js (chargé en premier par le manifest)
 const PROXY_URL = LB_CONFIG.PROXY_URL;
-const HOVER_DELAY_MS = 300;
 const VOCAB_KEY = 'lb_vocab';
 const VOCAB_MAX = 500;
 
@@ -30,7 +29,6 @@ const RTL_LANGS = new Set(['ar', 'ar-MA', 'ar-DZ', 'ar-EG', 'ti']);
 
 // ─── État global ──────────────────────────────────────────────────────────────
 
-let hoverTimer = null;
 let activeTooltip = null;
 let activePanel = null;
 let currentLang = 'en';
@@ -43,8 +41,6 @@ function init() {
     if (langue) currentLang = langue;
   });
 
-  document.addEventListener('mouseover', onMouseOver);
-  document.addEventListener('mouseout', onMouseOut);
   document.addEventListener('mouseup', onMouseUp);
   document.addEventListener('keydown', onKeyDown);
   document.addEventListener('click', onDocumentClick);
@@ -54,48 +50,7 @@ function init() {
   });
 }
 
-// ─── Détection du survol ──────────────────────────────────────────────────────
-
-// Démarre le timer de survol quand la souris passe sur un nœud texte
-function onMouseOver(e) {
-  if (e.target.closest('#lb-tooltip, #lb-panel, #lb-action-bar')) return;
-  const word = getWordUnderCursor(e);
-  if (!word) return;
-
-  clearTimeout(hoverTimer);
-  hoverTimer = setTimeout(() => {
-    handleWordHover(word, e.clientX, e.clientY);
-  }, HOVER_DELAY_MS);
-}
-
-// Annule le timer si la souris quitte l'élément
-function onMouseOut(e) {
-  if (e.target.closest('#lb-tooltip')) return;
-  clearTimeout(hoverTimer);
-}
-
-// Extrait le mot sous le curseur via caretRangeFromPoint
-function getWordUnderCursor(e) {
-  let range;
-  if (document.caretRangeFromPoint) {
-    range = document.caretRangeFromPoint(e.clientX, e.clientY);
-  } else if (document.caretPositionFromPoint) {
-    const pos = document.caretPositionFromPoint(e.clientX, e.clientY);
-    if (!pos) return null;
-    range = document.createRange();
-    range.setStart(pos.offsetNode, pos.offset);
-  } else {
-    return null;
-  }
-
-  if (!range || range.startContainer.nodeType !== Node.TEXT_NODE) return null;
-
-  range.expand('word');
-  const word = range.toString().trim().replace(/[.,;:!?'"()[\]{}<>]/g, '');
-  return word.length > 1 ? word : null;
-}
-
-// ─── Détection de sélection ───────────────────────────────────────────────────
+// ─── Détection de sélection (surlignement) ───────────────────────────────────
 
 // Détecte la sélection de texte après relâchement du bouton souris
 // Définit toujours le premier mot sélectionné ; affiche la barre si multi-mots
@@ -109,9 +64,6 @@ function onMouseUp(e) {
     removeActionBar();
     return;
   }
-
-  // Annule un éventuel survol en cours
-  clearTimeout(hoverTimer);
 
   // Extrait et nettoie le premier mot de la sélection
   const firstWord = text.split(/\s+/)[0].replace(/[.,;:!?'"()[\]{}<>«»""'']/g, '');
@@ -188,7 +140,6 @@ function handleWordHover(word, x, y) {
 function removeTooltip() {
   activeTooltip?.remove();
   activeTooltip = null;
-  clearTimeout(hoverTimer);
 }
 
 // ─── Panel latéral ───────────────────────────────────────────────────────────
