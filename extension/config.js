@@ -2,6 +2,5 @@
 // Chargé avant content.js dans manifest.json
 
 const LB_CONFIG = {
-  // ⚠️  Remplacer par l'URL réelle après `vercel deploy`
-  PROXY_URL: 'https://YOUR_PROJECT.vercel.app/api/claude',
+  PROXY_URL: 'https://linguabridge-alpha.vercel.app/api/claude',
 };
