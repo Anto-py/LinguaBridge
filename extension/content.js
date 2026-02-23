@@ -474,11 +474,31 @@ function exportVocabCSV() {
   return [header, ...rows].join('\n');
 }
 
-// Expose les fonctions vocab à la popup via messages
+// Gère les messages entrants (popup et background)
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg.type === 'EXPORT_VOCAB')    sendResponse({ csv: exportVocabCSV(), count: loadVocab().length });
   if (msg.type === 'GET_VOCAB_COUNT') sendResponse({ count: loadVocab().length });
+
+  // Ouvre le panel avec l'écran d'accueil si aucun contenu n'est affiché
+  if (msg.type === 'OPEN_PANEL') {
+    if (!activePanel) {
+      showPanel(renderWelcome());
+    }
+  }
 });
+
+// ─── Écran d'accueil ──────────────────────────────────────────────────────────
+
+// Retourne le HTML de l'écran d'accueil affiché à l'ouverture du panel
+function renderWelcome() {
+  return `
+    <div class="lb-welcome">
+      <div class="lb-welcome-icon">⬡</div>
+      <div class="lb-welcome-title">Prêt</div>
+      <div class="lb-welcome-text">Surligne un mot pour le définir.<br>Surligne une phrase pour la simplifier ou la traduire.</div>
+    </div>
+  `;
+}
 
 // ─── Démarrage ────────────────────────────────────────────────────────────────
 init();

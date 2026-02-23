@@ -379,6 +379,39 @@ body.lb-panel-open {
   text-align: right;
 }
 
+/* ─── Écran d'accueil ────────────────────────────────────────────────────────── */
+
+.lb-welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 48px 24px;
+  gap: 12px;
+}
+
+.lb-welcome-icon {
+  font-size: 40px;
+  color: var(--teal);
+  opacity: 0.4;
+  line-height: 1;
+}
+
+.lb-welcome-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--teal);
+}
+
+.lb-welcome-text {
+  font-size: 13px;
+  color: rgba(13, 22, 23, 0.5);
+  line-height: 1.7;
+}
+
 /* ─── États transversaux ─────────────────────────────────────────────────────── */
 
 /* Wrapper chargement avec label d'action */

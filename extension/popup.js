@@ -149,9 +149,22 @@ function handleExport() {
   });
 }
 
+// ─── Ouverture du panel latéral ───────────────────────────────────────────────
+
+// Envoie un message au content script de l'onglet actif pour ouvrir le panel
+function openPanelOnPage() {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    if (!tabs[0]?.id) return;
+    chrome.tabs.sendMessage(tabs[0].id, { type: 'OPEN_PANEL' }).catch(() => {
+      // L'onglet ne supporte pas les messages (ex: chrome://, PDF) — silencieux
+    });
+  });
+}
+
 // ─── Démarrage ────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   init();
   loadVocabCount();
+  openPanelOnPage();
   document.getElementById('export-btn').addEventListener('click', handleExport);
 });
