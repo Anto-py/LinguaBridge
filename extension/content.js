@@ -98,14 +98,33 @@ function getWordUnderCursor(e) {
 // ─── Détection de sélection ───────────────────────────────────────────────────
 
 // Détecte la sélection de texte après relâchement du bouton souris
+// Définit toujours le premier mot sélectionné ; affiche la barre si multi-mots
 function onMouseUp(e) {
   if (e.target.closest('#lb-tooltip, #lb-panel, #lb-action-bar')) return;
 
   const selection = window.getSelection();
   const text = selection?.toString().trim();
 
-  if (text && text.length > 2) {
+  if (!text || text.length < 2) {
+    removeActionBar();
+    return;
+  }
+
+  // Annule un éventuel survol en cours
+  clearTimeout(hoverTimer);
+
+  // Extrait et nettoie le premier mot de la sélection
+  const firstWord = text.split(/\s+/)[0].replace(/[.,;:!?'"()[\]{}<>«»""'']/g, '');
+  const isOneWord = text.split(/\s+/).filter((w) => w.length > 0).length === 1;
+
+  // Définit le premier mot dans tous les cas
+  if (firstWord.length > 1) {
     removeTooltip();
+    handleWordHover(firstWord, e.clientX, e.clientY);
+  }
+
+  // Affiche la barre Simplifier/Traduire uniquement pour les multi-mots
+  if (!isOneWord) {
     showActionBar(text, e.clientX, e.clientY);
   } else {
     removeActionBar();
