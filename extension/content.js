@@ -82,7 +82,7 @@ function onMouseUp(e) {
 
 // ─── Définition dans le panel ─────────────────────────────────────────────────
 
-// Affiche la définition du mot dans le panel avec sa phrase de contexte
+// Affiche la définition du mot dans le panel
 function showDefinition(word, selection) {
   const sentence = getSentenceContaining(word, selection);
 
@@ -259,8 +259,9 @@ async function fetchDefinition(word) {
   const systemPrompt = `Tu es un assistant pour apprenants de français langue étrangère niveau A1.
 Pour le mot donné, fournis :
 1. Une définition en français ultra-simple (max 1 phrase, mots courants)
-2. La traduction en ${currentLang}
-Format JSON : { "definition": "...", "traduction": "..." }`;
+2. Une phrase d'exemple courte en français (niveau A1-A2) qui utilise le mot naturellement — la phrase doit être entièrement en français, ne remplace jamais le mot par sa traduction
+3. La traduction du mot en ${currentLang}
+Format JSON : { "definition": "...", "exemple": "...", "traduction": "..." }`;
 
   return callProxy(word, systemPrompt);
 }
@@ -309,18 +310,21 @@ async function callProxy(prompt, systemPrompt) {
 
 // ─── Rendu des résultats ──────────────────────────────────────────────────────
 
-// Construit le HTML du panel de définition : mot + définition + phrase + traduction
-function renderDefinitionPanel(raw, word, sentence) {
+// Construit le HTML du panel de définition : mot + définition + exemple + traduction
+function renderDefinitionPanel(raw, word, pageSentence) {
   try {
     const data = parseJsonSafe(raw);
     if (data.error) throw new Error(data.error);
 
     const isNew = saveWord(word, data.definition, data.traduction, currentLang);
 
-    const sentenceBlock = sentence ? `
+    // Phrase d'exemple : priorité à l'exemple généré par Claude (en français),
+    // fallback sur la phrase extraite de la page si absent
+    const exampleText = data.exemple || pageSentence || '';
+    const exampleBlock = exampleText ? `
       <div class="lb-def-context">
-        <div class="lb-context-label">Dans la page</div>
-        <blockquote class="lb-def-sentence">${highlightWordInSentence(sentence, word)}</blockquote>
+        <div class="lb-context-label">Exemple</div>
+        <blockquote class="lb-def-sentence">${highlightWordInSentence(exampleText, word)}</blockquote>
       </div>
     ` : '';
 
@@ -333,7 +337,7 @@ function renderDefinitionPanel(raw, word, sentence) {
         </span>
       </div>
       <div class="lb-def-definition">${escapeHtml(data.definition)}</div>
-      ${sentenceBlock}
+      ${exampleBlock}
       <div class="lb-challenge">
         <div class="lb-challenge-label">Traduction</div>
         <span class="lb-traduction lb-hidden">${escapeHtml(data.traduction)}</span>
